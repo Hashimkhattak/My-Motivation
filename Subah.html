@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="ur">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#122220">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<title>Subah — Daily Discipline Tracker</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap');
+
+  :root{
+    --bg: #122220;
+    --bg-card: #1A2B28;
+    --bg-card2: #213632;
+    --line: #2E443F;
+    --sage: #8FB08A;
+    --gold: #D8B673;
+    --gold-soft: #3A331F;
+    --text: #E9EEEA;
+    --text-dim: #9BB0A9;
+    --text-faint: #66807A;
+    --danger: #C97B5F;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    padding-bottom: 150px;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap{ max-width: 560px; margin: 0 auto; padding: 0 18px; }
+
+  .topbar{
+    position: relative;
+    padding: 30px 18px 22px 18px;
+    text-align: center;
+    background: radial-gradient(120% 100% at 50% 0%, #1B2F2B 0%, var(--bg) 75%);
+    border-bottom: 1px solid var(--line);
+    overflow: hidden;
+  }
+  .topbar::before{
+    content:"";
+    position:absolute; top:-70px; left:50%; transform:translateX(-50%);
+    width: 320px; height: 320px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(216,182,115,0.14) 0%, rgba(216,182,115,0) 70%);
+  }
+  .day-pill{
+    display:inline-flex; align-items:center; gap:6px;
+    font-size: 11px; letter-spacing:1.5px; text-transform:uppercase; font-weight:700;
+    color: var(--gold); background: var(--gold-soft); border:1px solid #4A4128;
+    padding: 5px 14px; border-radius: 999px; position:relative;
+  }
+  .eyebrow{
+    font-size: 12px; letter-spacing: 2.5px; text-transform: uppercase;
+    color: var(--sage); font-weight: 600; position: relative; margin-top:14px;
+  }
+  .bell-btn{
+    display:inline-block; margin-top:10px; margin-left:8px; position:relative;
+    font-size: 11px; font-weight:700; color: var(--sage); background: #21362F;
+    border:1px solid #3A5249; padding: 5px 12px; border-radius: 999px; cursor:pointer;
+  }
+  .bell-btn.off{ color: var(--text-faint); background: var(--bg-card2); border-color: var(--line); }
+  h1.brand{ font-family: 'Fraunces', serif; font-weight:600; font-size:30px; margin-top:8px; position:relative; }
+  .tagline{ color: var(--text-dim); font-size: 13.5px; margin-top:6px; position:relative; }
+  .countdown-line{ color: var(--text-dim); font-size: 13px; margin-top:10px; position:relative; }
+  .countdown-line b{ color: var(--sage); font-weight:700; }
+
+  .wada-card{
+    margin-top: 18px; position:relative;
+    background: var(--bg-card); border:1px solid var(--line); border-radius:16px;
+    padding: 16px 18px; text-align:left;
+  }
+  .wada-card .tag{ font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:var(--sage); font-weight:700; }
+  .wada-card p{ font-family:'Fraunces',serif; font-style:italic; font-size:14.5px; line-height:1.55; margin-top:6px; color:#DCE6DF; }
+
+  .hadees-card{
+    margin-top: 12px; position:relative;
+    background: var(--bg-card2); border:1px solid var(--line); border-radius:16px;
+    padding: 16px 18px; text-align:left;
+  }
+  .hadees-card .tag{ font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:var(--gold); font-weight:700; }
+  .hadees-card p.meaning{ font-size: 13.5px; color: var(--text-dim); margin-top:8px; line-height:1.55; }
+  .hadees-card .ref{ font-size:11px; color:var(--text-faint); margin-top:8px; font-style:italic; }
+
+  .section-title{ font-family:'Fraunces', serif; font-size: 18px; font-weight:600; margin: 30px 0 14px 0; }
+
+  .ring-row{ display:flex; justify-content:center; padding: 6px 0 4px 0; }
+  .ring-wrap{ position:relative; width:160px; height:160px; }
+  svg.ring{ transform: rotate(-90deg); width:100%; height:100%; }
+  .ring-bg{ fill:none; stroke:var(--line); stroke-width:10; }
+  .ring-fg{ fill:none; stroke:var(--sage); stroke-width:10; stroke-linecap:round; transition: stroke-dashoffset 0.6s ease; }
+  .ring-center{ position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+  .ring-center .big{ font-family:'Fraunces',serif; font-size:28px; font-weight:700; }
+  .ring-center .small{ font-size:11px; color:var(--text-dim); margin-top:2px; }
+
+  .checklist{ background: var(--bg-card); border:1px solid var(--line); border-radius:16px; overflow:hidden; }
+  .item{
+    display:flex; align-items:center; gap:14px; padding: 16px 16px;
+    border-bottom: 1px solid var(--line); cursor:pointer; user-select:none; transition: background 0.2s;
+  }
+  .item:last-child{ border-bottom:none; }
+  .item:active{ background: var(--bg-card2); }
+  .check{
+    width:24px; height:24px; border-radius:7px; border:2px solid var(--text-faint);
+    flex-shrink:0; display:flex; align-items:center; justify-content:center; transition: all 0.2s;
+  }
+  .item.done .check{ background: var(--sage); border-color: var(--sage); }
+  .check svg{ width:14px; height:14px; opacity:0; transition: opacity 0.15s; }
+  .item.done .check svg{ opacity:1; }
+  .item-text{ font-size:15px; font-weight:500; flex:1; }
+  .item.done .item-text{ color: var(--text-dim); text-decoration: line-through; text-decoration-color: var(--text-faint); }
+  .item-icon{ font-size: 18px; width:22px; text-align:center; }
+
+  .counters{ display:flex; gap:12px; }
+  .counter-card{
+    flex:1; background: var(--bg-card); border:1px solid var(--line); border-radius:16px;
+    padding: 18px 16px; text-align:center; position:relative;
+  }
+  .counter-card .label{ font-size:12px; color:var(--text-dim); font-weight:600; margin-bottom:10px; }
+  .counter-card .value{ font-family:'Fraunces',serif; font-size: 30px; font-weight:700; }
+  .counter-card.smoke .value{ color: var(--danger); }
+  .counter-card.porn .value{ color: var(--sage); }
+  .counter-card .target{ font-size:11px; color: var(--text-faint); margin-top:4px; }
+  .counter-btns{ display:flex; gap:8px; margin-top:12px; justify-content:center; }
+  .cbtn{
+    width:32px; height:32px; border-radius:50%; border:1px solid var(--line); background: var(--bg-card2);
+    color: var(--text); font-size:16px; display:flex; align-items:center; justify-content:center; cursor:pointer;
+  }
+  .cbtn:active{ transform: scale(0.92); }
+
+  .week-strip{ display:flex; gap:6px; margin-top:10px; }
+  .week-strip .day{ flex:1; height:7px; border-radius:3px; background: var(--line); }
+  .week-strip .day.ok{ background: var(--sage); }
+  .week-caption{ display:flex; justify-content:space-between; margin-top:6px; font-size:10px; color:var(--text-faint); }
+
+  .meds{ display:flex; flex-direction:column; gap:10px; }
+  .med-row{
+    display:flex; align-items:center; gap:12px; background: var(--bg-card);
+    border:1px solid var(--line); border-radius:14px; padding:14px 16px;
+  }
+  .med-dot{ width:8px; height:8px; border-radius:50%; background: var(--sage); flex-shrink:0; }
+  .med-name{ font-weight:600; font-size:14px; }
+  .med-time{ font-size:12px; color:var(--text-dim); }
+
+  .timeline{ position:relative; padding-left: 22px; }
+  .timeline::before{ content:""; position:absolute; left:6px; top:6px; bottom:6px; width:2px; background: var(--line); }
+  .tl-block{ position:relative; margin-bottom: 22px; }
+  .tl-dot{ position:absolute; left:-22px; top:3px; width:13px; height:13px; border-radius:50%; background: var(--sage); border:3px solid var(--bg); }
+  .tl-time{ font-size:11px; letter-spacing:1px; text-transform:uppercase; color:var(--gold); font-weight:700; }
+  .tl-title{ font-family:'Fraunces',serif; font-size:17px; font-weight:600; margin-top:3px; }
+  .tl-list{ margin-top:8px; list-style:none; }
+  .tl-list li{ font-size:14px; color: var(--text-dim); padding: 5px 0 5px 18px; position:relative; }
+  .tl-list li::before{ content:"·"; position:absolute; left:4px; color: var(--sage); font-weight:900; font-size:18px; line-height:0.8; }
+  .tl-med{
+    margin-top:8px; display:inline-block; font-size:12px; background: var(--gold-soft); color: var(--gold);
+    padding: 4px 10px; border-radius:8px; font-weight:600;
+  }
+
+  .sos{
+    position: fixed; bottom: 84px; left:50%; transform:translateX(-50%);
+    background: var(--danger); color:#241712; border:none; border-radius:999px;
+    padding: 13px 24px; font-weight:700; font-size:13.5px; box-shadow: 0 8px 22px rgba(201,123,95,0.35);
+    display:flex; align-items:center; gap:8px; cursor:pointer; z-index:60;
+  }
+  .sos:active{ transform:translateX(-50%) scale(0.96); }
+
+  .bottomnav{
+    position: fixed; bottom:0; left:0; right:0; background: var(--bg-card);
+    border-top: 1px solid var(--line); display:flex; z-index:55;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  .nav-btn{
+    flex:1; display:flex; flex-direction:column; align-items:center; gap:4px;
+    padding: 12px 0 10px 0; color: var(--text-faint); cursor:pointer; background:none; border:none; font-family:'Inter',sans-serif;
+  }
+  .nav-btn .ic{ font-size:19px; }
+  .nav-btn .lb{ font-size:11px; font-weight:600; }
+  .nav-btn.active{ color: var(--sage); }
+
+  .page{ display:none; }
+  .page.active{ display:block; }
+
+  .modal-bg{ position:fixed; inset:0; background: rgba(0,0,0,0.6); display:none; align-items:flex-end; justify-content:center; z-index:100; }
+  .modal-bg.show{ display:flex; }
+  .modal{ background: var(--bg-card); width:100%; max-width:560px; border-radius: 20px 20px 0 0; padding: 26px 22px 34px 22px; animation: slideUp 0.25s ease; }
+  @keyframes slideUp{ from{ transform: translateY(40px); opacity:0; } to{ transform: translateY(0); opacity:1; } }
+  .modal h3{ font-family:'Fraunces',serif; font-size:22px; margin-bottom:14px; }
+  .modal ul{ list-style:none; }
+  .modal li{ padding: 13px 0; border-bottom:1px solid var(--line); font-size:14.5px; display:flex; gap:10px; }
+  .modal li:last-child{ border-bottom:none; }
+  .modal-close{ margin-top: 18px; width:100%; background: var(--sage); color:#122220; border:none; padding: 14px; border-radius:12px; font-weight:700; font-size:15px; }
+
+  footer{ text-align:center; color: var(--text-faint); font-size:12px; margin-top: 36px; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="day-pill" id="dayPill">Din — / 129</div>
+  <button class="bell-btn" id="bellBtn" onclick="toggleNotifications()">🔔 Notifications On</button>
+  <div class="eyebrow">Roz ek qadam</div>
+  <h1 class="brand">Subah</h1>
+  <div class="tagline">Apni sehat, apni shadi, apne aap se wada</div>
+  <div class="countdown-line"><b id="daysLeft">—</b> din baqi November tak</div>
+
+  <div class="wada-card">
+    <div class="tag">Aaj ka Wada</div>
+    <p id="wadaText">—</p>
+  </div>
+
+  <div class="hadees-card">
+    <div class="tag">Aaj ki Hadees</div>
+    <p class="meaning" id="hadeesText">—</p>
+    <div class="ref" id="hadeesRef">—</div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <div class="page active" data-page="aaj">
+    <div class="section-title">Aaj ka Score</div>
+    <div class="ring-row">
+      <div class="ring-wrap">
+        <svg class="ring" viewBox="0 0 120 120">
+          <circle class="ring-bg" cx="60" cy="60" r="50"></circle>
+          <circle class="ring-fg" id="ringFg" cx="60" cy="60" r="50" stroke-dasharray="314" stroke-dashoffset="314"></circle>
+        </svg>
+        <div class="ring-center">
+          <div class="big" id="ringScore">0/5</div>
+          <div class="small">tick mukammal</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-title">Aaj ki Checklist</div>
+    <div class="checklist" id="checklist"></div>
+  </div>
+
+  <div class="page" data-page="progress">
+    <div class="section-title">Smoking &amp; Porn</div>
+    <div class="counters">
+      <div class="counter-card smoke">
+        <div class="label">🚬 Cigarette Aaj</div>
+        <div class="value" id="smokeVal">0</div>
+        <div class="target" id="smokeTarget">Target: —</div>
+        <div class="counter-btns">
+          <div class="cbtn" onclick="changeSmoke(-1)">−</div>
+          <div class="cbtn" onclick="changeSmoke(1)">+</div>
+        </div>
+      </div>
+      <div class="counter-card porn">
+        <div class="label">🛡️ Porn-Free Streak</div>
+        <div class="value" id="streakVal">0</div>
+        <div class="target">din se bach rahe hain</div>
+        <div class="counter-btns">
+          <div class="cbtn" onclick="markRelapse()" title="Relapse">↺</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-title">Is Hafte ki Tasveer</div>
+    <div class="week-strip" id="weekStrip"></div>
+    <div class="week-caption"><span>7 din pehle</span><span>Aaj</span></div>
+
+    <div class="section-title">Smoking Weekly Target</div>
+    <div class="meds" id="smokePlanList"></div>
+  </div>
+
+  <div class="page" data-page="routine">
+    <div class="section-title">Pura Din ka Naqsha</div>
+    <div class="timeline" id="timeline"></div>
+  </div>
+
+</div>
+
+<button class="sos" onclick="openSOS()">⚡ Craving Aa Rahi Hai</button>
+
+<div class="bottomnav">
+  <button class="nav-btn active" data-target="aaj" onclick="switchPage('aaj')">
+    <span class="ic">☀️</span><span class="lb">Aaj</span>
+  </button>
+  <button class="nav-btn" data-target="progress" onclick="switchPage('progress')">
+    <span class="ic">📈</span><span class="lb">Progress</span>
+  </button>
+  <button class="nav-btn" data-target="routine" onclick="switchPage('routine')">
+    <span class="ic">🗓️</span><span class="lb">Routine</span>
+  </button>
+</div>
+
+<div class="modal-bg" id="sosModal">
+  <div class="modal">
+    <h3>Ruko, 2 minute.</h3>
+    <ul>
+      <li>💧 1 glass pani peejiye</li>
+      <li>💪 15–20 push-ups karein</li>
+      <li>🚶 10 minute walk par jayein</li>
+      <li>📞 Kisi dost ya ghar walay ko call karein</li>
+      <li>📵 Mobile rakh kar dusra kaam shuru karein</li>
+    </ul>
+    <p style="margin-top:14px; font-size:13px; color:var(--text-dim); font-style:italic;">Craving hamesha nahi rehti — aksar 5-10 minute mein khud kam ho jati hai.</p>
+    <button class="modal-close" onclick="closeSOS()">Theek hai, koshish karta hun</button>
+  </div>
+</div>
+
+<script>
+const WEDDING_DATE = new Date('2026-11-01T00:00:00');
+const START_DATE = new Date('2026-06-30T00:00:00');
+const TOTAL_DAYS = 129;
+const todayKey = () => new Date().toISOString().split('T')[0];
+
+function dayNumber(){
+  const now = new Date();
+  const diff = Math.floor((now - START_DATE) / (1000*60*60*24)) + 1;
+  return Math.min(Math.max(diff, 1), TOTAL_DAYS);
+}
+
+const wadaList = [
+  "November mein meri shadi hai. Main apni sehat aur apni biwi ke liye aaj ka plan follow karunga.",
+  "Har choti kamiyabi mujhe us din ke qareeb le jati hai jab mai apni biwi ke samne sar utha kar khada ho sakun.",
+  "Aaj ka din wapas nahi aayega. Jo mehnat aaj karunga, wahi November mein kaam aayegi.",
+  "Mai apne aap se kiya wada nibhaunga — chahe mushkil ho, chhota qadam bhi aage ka qadam hai.",
+  "Meri sehat sirf meri nahi, ab meri aane wali zindagi ka hissa hai. Aaj iska khayal rakhunga.",
+  "Jo cheez mujhe peeche khinchti hai, aaj usay na kahunga.",
+  "Sabar aur nizam — yehi do cheezein mujhe meri manzil tak le jayengi.",
+  "Mai apni kamzori ko apni pehchan nahi banaunga. Aaj se behtar version ban raha hun.",
+  "Har din ek inth hai us imarat ki jo mai apni shadi se pehle banana chahta hun.",
+  "Mushkil waqt guzar jata hai, lekin jo cheezein mai aaj choro ga, unka faida hamesha rahega.",
+  "Mai akela nahi hun is safar mein.",
+  "Aaj ka din meri kahani ka woh hissa hai jisay mai khud likh raha hun."
+];
+
+const hadeesList = [
+  { text: "Sab se behtar shaks woh hai jo logon ke liye sab se zyada faidemand ho.", ref: "Tabarani — Hasan" },
+  { text: "Taqatwar momin Allah ke nazdeek kamzor momin se behtar aur zyada mehboob hai, jabke dono mein khair hai.", ref: "Sahih Muslim" },
+  { text: "Jab tum subah karo to shaam ka intezar na karo, yani har waqt ko ghanimat samjho.", ref: "Sahih Bukhari" },
+  { text: "Allah Taala paak hai aur sirf paak cheez hi qubool karta hai.", ref: "Sahih Muslim" },
+  { text: "Sab se mehboob amal Allah ke nazdeek woh hai jo musalsal ho, chahe kam hi kyun na ho.", ref: "Sahih Bukhari" },
+  { text: "Jawani ko budhape se pehle, aur sehat ko bimari se pehle ghanimat samjho.", ref: "Al-Hakim — Sahih" },
+  { text: "Allah uss bande ko pasand karta hai jo koi kaam kare to usay mehnat aur ehtimam se kare.", ref: "Shu'ab al-Iman, Bayhaqi" },
+  { text: "Nikah deen ka aadha hissa hai, baqi aadhe mein Allah se dar kar zindagi guzaro.", ref: "Bayhaqi" },
+  { text: "Jo Allah par tawakkul kare, Allah uske liye kaafi ho jata hai.", ref: "Quran 65:3" },
+  { text: "Sabr roshni hai.", ref: "Sahih Muslim" },
+  { text: "Tum mein sab se behtar woh hai jo apni biwi ke liye behtar ho.", ref: "Sunan Tirmidhi" },
+  { text: "Jo shaks Aakhirat ko apni sab se bari fikr bana le, Allah uske dil mein ghina dal deta hai aur uske maamlay samait deta hai.", ref: "Sunan Ibn Majah — mafhoom" }
+];
+
+function getRotatingIndex(arr){
+  return (dayNumber() - 1) % arr.length;
+}
+
+const checklistItems = [
+  { id: 'smoke_target', icon:'🚬', text: 'Smoking target pura hua?' },
+  { id: 'porn_free', icon:'🛡️', text: 'Porn se bacha?' },
+  { id: 'exercise', icon:'🏋️', text: 'Exercise ki?' },
+  { id: 'doodh', icon:'🥛', text: 'Doodh piya?' },
+  { id: 'medicine', icon:'💊', text: 'Medicines li?' }
+];
+
+const routineData = [
+  { time:'6:00 – 6:30 AM', title:'Subah', items:['Fajr', '2 glass pani', '5 minute stretching'] },
+  { time:'Breakfast', title:'Naashta', items:['1 glass doodh', '2 banana', 'Bhunay huay kalay chanay (mutthi bhar)', 'Mess ka breakfast jo bhi mile'], med:'Trigoman + L-Arginine' },
+  { time:'Duty ke Dauran', title:'Din Mein', items:['Har 2–3 ghante pani piyein', 'Cigarette ka man kare to pehle 10 minute delay karein — craving khud kam ho jati hai'] },
+  { time:'Lunch', title:'Dopahar', items:['Mess mein jo protein mile usay priority dein: chicken, beef, fish, daal', 'Sath dahi agar mile'] },
+  { time:'Evening (30–40 min)', title:'Shaam — Exercise', items:['Push-ups, squats, walk (halka rakhein)', 'Cravings ho to: mungfali ya kaddu ke beej khayein', 'Gym available ho to bonus'] },
+  { time:'Dinner', title:'Raat ka Khana', items:['Mess ka dinner'], med:'Trisax' },
+  { time:'Sone se Pehle', title:'Aakhri Ghanta', items:['1 glass doodh + 2-3 chuwaray (khajoor)', 'Kalonji — 1 chamach shahad ya pani ke sath', 'Mobile par porn bilkul nahi', '11 baje tak (ya jitni jaldi mumkin ho) sone ki koshish'] }
+];
+
+const smokePlan = [
+  { week:'Week 1', target:'8' },
+  { week:'Week 2', target:'6' },
+  { week:'Week 3', target:'4' },
+  { week:'Week 4', target:'2' },
+  { week:'Week 5 se aage', target:'0' }
+];
+
+let state = { checks: {}, smoke: 0, weekHistory: {} };
+const hasStorage = () => typeof window !== 'undefined' && !!window.storage;
+
+async function loadState(){
+  if(hasStorage()){
+    try{
+      const r = await window.storage.get('subah-state-' + todayKey());
+      if(r && r.value){
+        const parsed = JSON.parse(r.value);
+        state.checks = parsed.checks || {};
+        state.smoke = parsed.smoke || 0;
+      }
+    }catch(e){ /* no data yet for today, that's fine */ }
+
+    try{
+      const r2 = await window.storage.get('subah-week-history');
+      if(r2 && r2.value){ state.weekHistory = JSON.parse(r2.value); }
+    }catch(e){ /* no history yet, that's fine */ }
+
+    try{
+      const r3 = await window.storage.get('subah-streak');
+      if(r3 && r3.value){ state.streak = JSON.parse(r3.value); }
+    }catch(e){ /* no streak saved yet, that's fine */ }
+  }
+  if(!state.streak) state.streak = { count: 0, lastUpdate: null };
+  render();
+}
+
+async function saveToday(){
+  if(hasStorage()){
+    try{
+      await window.storage.set('subah-state-' + todayKey(), JSON.stringify({ checks: state.checks, smoke: state.smoke }));
+    }catch(e){ /* storage unavailable, continue silently */ }
+  }
+  const doneCount = Object.values(state.checks).filter(Boolean).length;
+  state.weekHistory[todayKey()] = doneCount >= 4;
+  if(hasStorage()){
+    try{
+      await window.storage.set('subah-week-history', JSON.stringify(state.weekHistory));
+    }catch(e){ /* storage unavailable, continue silently */ }
+  }
+}
+
+async function saveStreak(){
+  if(hasStorage()){
+    try{
+      await window.storage.set('subah-streak', JSON.stringify(state.streak));
+    }catch(e){ /* storage unavailable, continue silently */ }
+  }
+}
+
+function renderTopbar(){
+  document.getElementById('dayPill').textContent = 'Din ' + dayNumber() + ' / ' + TOTAL_DAYS;
+  const now = new Date();
+  const diff = Math.ceil((WEDDING_DATE - now) / (1000*60*60*24));
+  document.getElementById('daysLeft').textContent = diff > 0 ? diff : 0;
+  document.getElementById('wadaText').textContent = '"' + wadaList[getRotatingIndex(wadaList)] + '"';
+  const h = hadeesList[getRotatingIndex(hadeesList)];
+  document.getElementById('hadeesText').textContent = h.text;
+  document.getElementById('hadeesRef').textContent = '— ' + h.ref;
+}
+
+function renderChecklist(){
+  const wrap = document.getElementById('checklist');
+  wrap.innerHTML = '';
+  checklistItems.forEach(item => {
+    const done = !!state.checks[item.id];
+    const div = document.createElement('div');
+    div.className = 'item' + (done ? ' done' : '');
+    div.onclick = () => toggleCheck(item.id);
+    div.innerHTML = '<div class="item-icon">' + item.icon + '</div>' +
+      '<div class="item-text">' + item.text + '</div>' +
+      '<div class="check"><svg viewBox="0 0 24 24" fill="none"><path d="M4 12l5 5L20 6" stroke="#122220" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></div>';
+    wrap.appendChild(div);
+  });
+  renderRing();
+}
+
+function renderRing(){
+  const total = checklistItems.length;
+  const done = Object.values(state.checks).filter(Boolean).length;
+  const circumference = 314;
+  const offset = circumference - (done/total) * circumference;
+  document.getElementById('ringFg').style.strokeDashoffset = offset;
+  document.getElementById('ringScore').textContent = done + '/' + total;
+}
+
+function toggleCheck(id){
+  state.checks[id] = !state.checks[id];
+  saveToday();
+  renderChecklist();
+}
+
+function getSmokeTarget(){
+  const now = new Date();
+  const weekNum = Math.floor((now - START_DATE) / (1000*60*60*24*7)) + 1;
+  const targets = {1:8, 2:6, 3:4, 4:2};
+  if(weekNum <= 0) return 8;
+  if(weekNum >= 5) return 0;
+  return targets[weekNum] !== undefined ? targets[weekNum] : 0;
+}
+
+function renderSmoke(){
+  document.getElementById('smokeVal').textContent = state.smoke;
+  document.getElementById('smokeTarget').textContent = 'Target: ' + getSmokeTarget() + '/din';
+}
+
+function changeSmoke(delta){
+  state.smoke = Math.max(0, state.smoke + delta);
+  saveToday();
+  renderSmoke();
+}
+
+function renderStreak(){
+  const last = state.streak.lastUpdate;
+  if(last !== todayKey()){
+    state.streak.count += 1;
+    state.streak.lastUpdate = todayKey();
+    saveStreak();
+  }
+  document.getElementById('streakVal').textContent = state.streak.count;
+}
+
+function markRelapse(){
+  if(confirm('Streak reset karna chahte hain?')){
+    state.streak.count = 0;
+    state.streak.lastUpdate = todayKey();
+    saveStreak();
+    renderStreak();
+  }
+}
+
+function renderWeekStrip(){
+  const strip = document.getElementById('weekStrip');
+  strip.innerHTML = '';
+  const today = new Date();
+  for(let i = 6; i >= 0; i--){
+    const d = new Date(today);
+    d.setDate(d.getDate() - i);
+    const key = d.toISOString().split('T')[0];
+    const ok = state.weekHistory[key];
+    const div = document.createElement('div');
+    div.className = 'day' + (ok ? ' ok' : '');
+    strip.appendChild(div);
+  }
+}
+
+function renderSmokePlan(){
+  const wrap = document.getElementById('smokePlanList');
+  wrap.innerHTML = '';
+  smokePlan.forEach(p => {
+    const div = document.createElement('div');
+    div.className = 'med-row';
+    div.innerHTML = '<div class="med-dot"></div><div style="flex:1;"><div class="med-name">' + p.week + '</div></div><div class="med-time">' + p.target + ' cigarette/din</div>';
+    wrap.appendChild(div);
+  });
+}
+
+function renderTimeline(){
+  const wrap = document.getElementById('timeline');
+  wrap.innerHTML = '';
+  routineData.forEach(block => {
+    const div = document.createElement('div');
+    div.className = 'tl-block';
+    let itemsHtml = block.items.map(i => '<li>' + i + '</li>').join('');
+    let medHtml = block.med ? '<div class="tl-med">💊 ' + block.med + '</div>' : '';
+    div.innerHTML = '<div class="tl-dot"></div>' +
+      '<div class="tl-time">' + block.time + '</div>' +
+      '<div class="tl-title">' + block.title + '</div>' +
+      '<ul class="tl-list">' + itemsHtml + '</ul>' + medHtml;
+    wrap.appendChild(div);
+  });
+}
+
+function switchPage(name){
+  document.querySelectorAll('.page').forEach(p => p.classList.toggle('active', p.dataset.page === name));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.target === name));
+}
+
+function openSOS(){ document.getElementById('sosModal').classList.add('show'); }
+function closeSOS(){ document.getElementById('sosModal').classList.remove('show'); }
+
+const notifySchedule = [
+  { time:'06:00', icon:'🌅', text:'Fajr ka waqt — uth kar 2 glass pani piyein.' },
+  { time:'06:30', icon:'🥛', text:'Breakfast: doodh, banana, bhunay kalay chanay lein.' },
+  { time:'06:35', icon:'💊', text:'Trigoman + L-Arginine lene ka waqt hai.' },
+  { time:'09:00', icon:'💧', text:'Pani peene ka waqt — kam se kam 1 glass.' },
+  { time:'12:30', icon:'🍛', text:'Lunch mein protein priority dein: chicken/beef/fish/daal.' },
+  { time:'14:30', icon:'💧', text:'Pani peene ka waqt.' },
+  { time:'17:30', icon:'🏋️', text:'Exercise ka waqt — push-ups, squats, walk.' },
+  { time:'19:30', icon:'💊', text:'Trisax lene ka waqt — dinner ke sath.' },
+  { time:'21:30', icon:'💧', text:'Pani peene ka waqt.' },
+  { time:'22:30', icon:'🌙', text:'Sone se pehle: doodh + chuwaray + kalonji lein.' },
+  { time:'22:50', icon:'📵', text:'Mobile rakh dein, neend ka waqt qareeb hai.' },
+];
+
+let notificationsOn = false;
+let firedToday = {};
+
+function notifyKey(){ return todayKey(); }
+
+async function loadNotifyPref(){
+  if(hasStorage()){
+    try{
+      const r = await window.storage.get('subah-notify-pref');
+      if(r && r.value === 'on') notificationsOn = true;
+    }catch(e){ /* default off */ }
+  }
+  updateBell();
+}
+
+async function toggleNotifications(){
+  if(!notificationsOn){
+    if(!('Notification' in window)){
+      alert('Ye browser notifications support nahi karta.');
+      return;
+    }
+    const perm = await Notification.requestPermission();
+    if(perm !== 'granted'){
+      alert('Notifications allow nahi hui. Browser settings mein permission dein.');
+      return;
+    }
+    notificationsOn = true;
+  } else {
+    notificationsOn = false;
+  }
+  updateBell();
+  if(hasStorage()){
+    try{ await window.storage.set('subah-notify-pref', notificationsOn ? 'on' : 'off'); }catch(e){}
+  }
+}
+
+function updateBell(){
+  const btn = document.getElementById('bellBtn');
+  if(!btn) return;
+  btn.textContent = notificationsOn ? '🔔 Notifications On' : '🔕 Notifications Off';
+  btn.classList.toggle('off', !notificationsOn);
+}
+
+function checkNotifications(){
+  if(!notificationsOn) return;
+  const now = new Date();
+  const hh = String(now.getHours()).padStart(2,'0');
+  const mm = String(now.getMinutes()).padStart(2,'0');
+  const current = hh + ':' + mm;
+  notifySchedule.forEach(item => {
+    const fireKey = notifyKey() + '-' + item.time;
+    if(item.time === current && !firedToday[fireKey]){
+      firedToday[fireKey] = true;
+      if('Notification' in window && Notification.permission === 'granted'){
+        new Notification(item.icon + ' Subah Reminder', { body: item.text });
+      }
+    }
+  });
+}
+
+function render(){
+  renderTopbar();
+  renderChecklist();
+  renderSmoke();
+  renderStreak();
+  renderWeekStrip();
+  renderSmokePlan();
+  renderTimeline();
+}
+
+loadState();
+loadNotifyPref();
+setInterval(renderTopbar, 60000);
+setInterval(checkNotifications, 20000);
+
+if('serviceWorker' in navigator){
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  });
+}
+</script>
+
+</body>
+</html>
